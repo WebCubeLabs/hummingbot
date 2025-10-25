@@ -50,23 +50,19 @@ class TestLighterUtils(unittest.TestCase):
     
     def test_lighter_config_map_structure(self):
         """Test LighterConfigMap has required fields."""
-        config = LighterConfigMap.model_construct()
-        
-        # Check that required fields exist
-        self.assertTrue(hasattr(config, 'lighter_api_key'))
-        self.assertTrue(hasattr(config, 'lighter_api_secret'))
-        self.assertTrue(hasattr(config, 'lighter_account_index'))
-        self.assertTrue(hasattr(config, 'lighter_api_key_index'))
+        # Check that required fields exist in the model
+        self.assertIn('lighter_api_key', LighterConfigMap.model_fields)
+        self.assertIn('lighter_api_secret', LighterConfigMap.model_fields)
+        self.assertIn('lighter_account_index', LighterConfigMap.model_fields)
+        self.assertIn('lighter_api_key_index', LighterConfigMap.model_fields)
     
     def test_lighter_testnet_config_map_structure(self):
         """Test LighterTestnetConfigMap has required fields."""
-        config = LighterTestnetConfigMap.model_construct()
-        
-        # Check that required fields exist
-        self.assertTrue(hasattr(config, 'lighter_testnet_api_key'))
-        self.assertTrue(hasattr(config, 'lighter_testnet_api_secret'))
-        self.assertTrue(hasattr(config, 'lighter_testnet_account_index'))
-        self.assertTrue(hasattr(config, 'lighter_testnet_api_key_index'))
+        # Check that required fields exist in the model
+        self.assertIn('lighter_testnet_api_key', LighterTestnetConfigMap.model_fields)
+        self.assertIn('lighter_testnet_api_secret', LighterTestnetConfigMap.model_fields)
+        self.assertIn('lighter_testnet_account_index', LighterTestnetConfigMap.model_fields)
+        self.assertIn('lighter_testnet_api_key_index', LighterTestnetConfigMap.model_fields)
 
 
 if __name__ == "__main__":

@@ -22,23 +22,19 @@ class TestLighterPerpetualUtils(unittest.TestCase):
     
     def test_perpetual_config_map_structure(self):
         """Test LighterPerpetualConfigMap has required fields."""
-        config = LighterPerpetualConfigMap.model_construct()
-        
-        # Check that required fields exist
-        self.assertTrue(hasattr(config, 'lighter_perpetual_api_key'))
-        self.assertTrue(hasattr(config, 'lighter_perpetual_api_secret'))
-        self.assertTrue(hasattr(config, 'lighter_perpetual_account_index'))
-        self.assertTrue(hasattr(config, 'lighter_perpetual_api_key_index'))
+        # Check that required fields exist in the model
+        self.assertIn('lighter_perpetual_api_key', LighterPerpetualConfigMap.model_fields)
+        self.assertIn('lighter_perpetual_api_secret', LighterPerpetualConfigMap.model_fields)
+        self.assertIn('lighter_perpetual_account_index', LighterPerpetualConfigMap.model_fields)
+        self.assertIn('lighter_perpetual_api_key_index', LighterPerpetualConfigMap.model_fields)
     
     def test_perpetual_testnet_config_map_structure(self):
         """Test LighterPerpetualTestnetConfigMap has required fields."""
-        config = LighterPerpetualTestnetConfigMap.model_construct()
-        
-        # Check that required fields exist
-        self.assertTrue(hasattr(config, 'lighter_perpetual_testnet_api_key'))
-        self.assertTrue(hasattr(config, 'lighter_perpetual_testnet_api_secret'))
-        self.assertTrue(hasattr(config, 'lighter_perpetual_testnet_account_index'))
-        self.assertTrue(hasattr(config, 'lighter_perpetual_testnet_api_key_index'))
+        # Check that required fields exist in the model
+        self.assertIn('lighter_perpetual_testnet_api_key', LighterPerpetualTestnetConfigMap.model_fields)
+        self.assertIn('lighter_perpetual_testnet_api_secret', LighterPerpetualTestnetConfigMap.model_fields)
+        self.assertIn('lighter_perpetual_testnet_account_index', LighterPerpetualTestnetConfigMap.model_fields)
+        self.assertIn('lighter_perpetual_testnet_api_key_index', LighterPerpetualTestnetConfigMap.model_fields)
 
 
 if __name__ == "__main__":
