@@ -32,6 +32,8 @@ COPY setup/pip_packages.txt /tmp/pip_packages.txt
 RUN python3 -m pip install --no-deps -r /tmp/pip_packages.txt && \
     rm /tmp/pip_packages.txt
 
+# Install Lighter SDK from GitHub
+RUN python3 -m pip install git+https://github.com/elliottech/lighter-python.git
 
 RUN python3 setup.py build_ext --inplace -j 8 && \
     rm -rf build/ && \
@@ -59,7 +61,7 @@ ENV BUILD_DATE=${BUILD_DATE}
 
 ENV INSTALLATION_TYPE=docker
 
-# Install system dependencies
+# Install system dependencies (runtime only, no build tools)
 RUN apt-get update && \
     apt-get install -y sudo libusb-1.0 && \
     rm -rf /var/lib/apt/lists/*
@@ -69,13 +71,22 @@ RUN mkdir -p /home/hummingbot/conf /home/hummingbot/conf/connectors /home/hummin
 
 WORKDIR /home/hummingbot
 
-# Copy all build artifacts from builder image
-COPY --from=builder /opt/conda/ /opt/conda/
-COPY --from=builder /home/ /home/
+# Copy only the hummingbot conda environment (not the entire conda installation)
+COPY --from=builder /opt/conda/envs/hummingbot /opt/conda/envs/hummingbot
+
+# Copy only necessary application files
+COPY --from=builder /home/hummingbot/bin /home/hummingbot/bin
+COPY --from=builder /home/hummingbot/hummingbot /home/hummingbot/hummingbot
+COPY --from=builder /home/hummingbot/scripts /home/hummingbot/scripts
+COPY --from=builder /home/hummingbot/controllers /home/hummingbot/controllers
+COPY --from=builder /home/hummingbot/LICENSE /home/hummingbot/LICENSE
+COPY --from=builder /home/hummingbot/README.md /home/hummingbot/README.md
+
+# Copy .bashrc for conda activation
+COPY --from=builder /root/.bashrc /root/.bashrc
 
 # Setting bash as default shell because we have .bashrc with customized PATH (setting SHELL affects RUN, CMD and ENTRYPOINT, but not manual commands e.g. `docker run image COMMAND`!)
 SHELL [ "/bin/bash", "-lc" ]
 
 # Set the default command to run when starting the container
-
 CMD conda activate hummingbot && ./bin/hummingbot_quickstart.py 2>> ./logs/errors.log
