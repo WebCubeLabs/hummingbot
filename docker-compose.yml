@@ -1,44 +1,128 @@
+# Railway Docker Compose Configuration
+# Each service runs a different strategy with separate API keys
+
+version: '3.8'
+
 services:
-  hummingbot:
-    container_name: hummingbot
-    image: hummingbot/hummingbot:latest
-    # build: # Uncomment this build section and comment image to build Hummingbot locally
-    #   context: .
-    #   dockerfile: Dockerfile
+  # MQTT Broker (for monitoring/dashboard)
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"
     volumes:
-      - ./conf:/home/hummingbot/conf
-      - ./conf/connectors:/home/hummingbot/conf/connectors
-      - ./conf/strategies:/home/hummingbot/conf/strategies
-      - ./conf/controllers:/home/hummingbot/conf/controllers
-      - ./conf/scripts:/home/hummingbot/conf/scripts
+      - ./mqtt/config:/mosquitto/config
+      - ./mqtt/data:/mosquitto/data
+      - ./mqtt/log:/mosquitto/log
+    restart: unless-stopped
+    networks:
+      - hummingbot-net
+
+  # Funding Rate Arbitrage Strategy
+  funding-arb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: conda run -n hummingbot python scripts/v2_funding_rate_arb.py
+    volumes:
+      - ./conf-funding-arb:/home/hummingbot/conf
       - ./logs:/home/hummingbot/logs
-      - ./data:/home/hummingbot/data
-      - ./certs:/home/hummingbot/certs
-      - ./scripts:/home/hummingbot/scripts
-      - ./controllers:/home/hummingbot/controllers
+    environment:
+      - STRATEGY_NAME=funding-arb
+      - CONFIG_PASSWORD=${FUNDING_ARB_CONFIG_PASSWORD:-${CONFIG_PASSWORD}}
+      - MQTT_HOST=mqtt-broker
+      - MQTT_PORT=1883
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+    depends_on:
+      - mqtt-broker
+    networks:
+      - hummingbot-net
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "5"
-    tty: true
-    stdin_open: true
-    network_mode: host
-  #  environment:
-  #    - CONFIG_PASSWORD=admin
-  #    - CONFIG_FILE_NAME=v2_with_controllers.py
-  #    - SCRIPT_CONFIG=conf_v2_with_controllers.yml
+        max-file: "3"
 
-  # gateway:
-  #  restart: always
-  #  container_name: gateway
-  #  image: hummingbot/gateway:latest
-  #  ports:
-  #    - "15888:15888"
-  #  volumes:
-  #    - "./gateway-files/conf:/home/gateway/conf"
-  #    - "./gateway-files/logs:/home/gateway/logs"
-  #    - "./certs:/home/gateway/certs"
-  #  environment:
-  #    - GATEWAY_PASSPHRASE=admin
-  #    - DEV=true
+  # RSI Directional Trading Strategy
+  rsi-strategy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: conda run -n hummingbot python scripts/v2_directional_rsi.py
+    volumes:
+      - ./conf-rsi:/home/hummingbot/conf
+      - ./logs:/home/hummingbot/logs
+    environment:
+      - STRATEGY_NAME=rsi
+      - CONFIG_PASSWORD=${RSI_CONFIG_PASSWORD:-${CONFIG_PASSWORD}}
+      - MQTT_HOST=mqtt-broker
+      - MQTT_PORT=1883
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+    depends_on:
+      - mqtt-broker
+    networks:
+      - hummingbot-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Pure Market Making Strategy
+  pmm-maker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: conda run -n hummingbot python scripts/simple_pmm.py
+    volumes:
+      - ./conf-pmm:/home/hummingbot/conf
+      - ./logs:/home/hummingbot/logs
+    environment:
+      - STRATEGY_NAME=pmm
+      - CONFIG_PASSWORD=${PMM_CONFIG_PASSWORD:-${CONFIG_PASSWORD}}
+      - MQTT_HOST=mqtt-broker
+      - MQTT_PORT=1883
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+    depends_on:
+      - mqtt-broker
+    networks:
+      - hummingbot-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # TWAP Multiple Pairs Strategy
+  twap-strategy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: conda run -n hummingbot python scripts/v2_twap_multiple_pairs.py
+    volumes:
+      - ./conf-twap:/home/hummingbot/conf
+      - ./logs:/home/hummingbot/logs
+    environment:
+      - STRATEGY_NAME=twap
+      - CONFIG_PASSWORD=${TWAP_CONFIG_PASSWORD:-${CONFIG_PASSWORD}}
+      - MQTT_HOST=mqtt-broker
+      - MQTT_PORT=1883
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+    depends_on:
+      - mqtt-broker
+    networks:
+      - hummingbot-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  hummingbot-net:
+    driver: bridge
